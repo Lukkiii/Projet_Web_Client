@@ -41,16 +41,9 @@
 'unsafe-inline'; media-src *; img-src 'self' data: content:;script-src 'self'
 http://* 'unsafe-inline' 'unsafe-eval' ;">
 
-        <title>Hello World</title>
     </head>
     <body>
         <div class="app">
-            <!--<h1>Apache Cordova</h1>
-            <div id="deviceready" class="blink">
-                <p class="event listening">Connecting to Device</p>
-                <p class="event received">Device is Ready</p>
-            </div>-->
-        
             <form id="log">
                 <label for="username">Username:</label>
                 <input type="text" id="username" name="username" required>
@@ -60,7 +53,13 @@ http://* 'unsafe-inline' 'unsafe-eval' ;">
                 <button type="submit">Login</button>
             </form>
         </div>
-        
+        <div id="board" class="board" style="display: none;">
+            <!-- script qui va génerer le plateau de base -->
+            <script src="js/platoBase.js"></script>
+            
+            <!-- Gestion de mouvement libre -->
+            <script src="js/mouvement.js"></script>
+        </div>
         <script src="cordova.js"></script>
         <script src="js/index.js"></script>
     </body>
