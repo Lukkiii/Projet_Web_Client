@@ -1,50 +1,42 @@
 const http = require('http');
-const server = http.createServer();
-server.listen(9898); // On écoute sur le port 9898
-// Création du server WebSocket qui utilise le serveur précédent
+const app = require('./app');
 const WebSocketServer = require('websocket').server;
+require('dotenv').config();
+
+const PORT = 9898;
+
+const server = http.createServer(app);
+
 const wsServer = new WebSocketServer({
- httpServer: server
+    httpServer: server
 });
 
-const tabUser = [];
+wsServer.on('request', (request) => {
+    const wsConnection = request.accept(null, request.origin);
+    console.log('WebSocket connection established');
 
-// Mise en place des événements WebSockets
-wsServer.on('request', function(request) {
-    const connection = request.accept(null, request.origin);
-    // Ecrire ici le code qui indique ce que l'on fait en cas de
-    // réception de message et en cas de fermeture de la WebSocket
-    connection.on('message', function(message) {
-        console.log('Received Message:', message.utf8Data);
-        try {
-            const receivedData = JSON.parse(message.utf8Data);
-            const { action, username, password } = receivedData;
-            console.log(username, password); 
-
-            if (action === 'login') {
-                console.log('Login attempt');
-                const userExists = tabUser.some(user => user.username === username);
-                console.log('User exists: attempt');
-                if (!userExists) {
-                    console.log('User does not exist');
-                    tabUser.push({ username, password });
-                    connection.send('Login successful');
-                } else {
-                    console.log('User exists');
-                    if (username.password === password) {
-                        console.log('Correct password');
-                        connection.send('Login successful');
-                    } else {
-                        console.log('Incorrect password');
-                        connection.send('Incorrect password');
-                    }
-                }
+    wsConnection.on('message', async (message) => {
+        if (message.type === 'utf8') {
+            const data = JSON.parse(message.utf8Data);
+            console.log('Received Message:', data);
+            if (data.action === 'register') {
+                await handleRegister(wsConnection, data);
+            } else if (data.action === 'login') {
+                await handleLogin(wsConnection, data);
             }
-        }catch (error) {
-            connection.send('Hello Client!');
+        } else if (message.type === 'binary') {
+            console.log('Received Binary Message of ' + message.binaryData.length + ' bytes');
+            wsConnection.sendBytes(message.binaryData);
         }
     });
-    connection.on('close', function(reasonCode, description) {
-    // To do
+
+    wsConnection.on('close', (reasonCode, description) => {
+        console.log('Connection closed');
     });
 });
+
+server.listen(PORT, () => {
+    console.log(`Server is listening on port ${PORT}`);
+});
+
+const { handleRegister, handleLogin } = require('./controllers/user');
